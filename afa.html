@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AFA PORTAL</title>
+
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/afa.css">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- Supabase Database Connection --><script src="js/supabase.js"></script>
+
+</head>
+
+<body>
+
+<button class="menu-btn" onclick="openMenu()">☰</button>
+
+<div id="menu-container"></div>
+
+<div class="container">
+
+<div class="afa-logo-container">
+<img src="images/afalogo.png.jpeg" alt="AFA Logo" class="afa-logo">
+</div>
+
+<h2>AFA PORTAL</h2>
+<p class="subtitle">Manage your AFA services</p>
+
+<div class="afa-options">
+
+<button class="premium" onclick="openPremium()">Premium (₵30)</button>
+<button class="normal" onclick="openNormal()">Normal (₵25)</button>
+
+</div>
+
+<!-- PREMIUM MODAL -->
+
+<div id="premiumModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closePremium()">&times;</span>
+
+<h2>AFA Registration</h2>
+
+<form id="afaForm">
+
+<label>Full Name *</label>
+<input type="text" id="pName" required>
+
+<label>Phone Number *</label>
+<input type="text" id="pPhone" required>
+
+<label>ID Type *</label>
+<select id="pIdType" required>
+<option value="">Select ID Type</option>
+<option>Ghana Card</option>
+<option>Passport</option>
+<option>Driver License</option>
+<option>Voter ID</option>
+</select>
+
+<label>ID Number *</label>
+<input type="text" id="pIdNumber" required>
+
+<div class="modal-buttons">
+
+<button type="button" class="cancel-btn" onclick="closePremium()">Cancel</button>
+<button type="submit" class="pay-btn">Pay & Register</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<!-- NORMAL MODAL -->
+
+<div id="normalModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeNormal()">&times;</span>
+
+<h2>AFA Registration</h2>
+
+<form id="normalForm">
+
+<label>Full Name *</label>
+<input type="text" id="nName" required>
+
+<label>Phone Number *</label>
+<input type="text" id="nPhone" required>
+
+<label>ID Type *</label>
+<select id="nIdType" required>
+<option value="">Select ID Type</option>
+<option>Ghana Card</option>
+<option>Passport</option>
+<option>Driver License</option>
+<option>Voter ID</option>
+</select>
+
+<label>ID Number *</label>
+<input type="text" id="nIdNumber" required>
+
+<label>ID Front (Image/PDF) *</label>
+<input type="file" id="nIdFront" accept="image/*,application/pdf" required>
+
+<label>ID Back (Image/PDF) *</label>
+<input type="file" id="nIdBack" accept="image/*,application/pdf" required>
+
+<div class="modal-buttons">
+
+<button type="button" class="cancel-btn" onclick="closeNormal()">Cancel</button>
+<button type="submit" class="pay-btn">Pay & Register</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<div class="option-text">
+
+<p>⬆ Register AFA without pictures upload</p>
+<p>⬆ Register AFA with pictures upload</p>
+
+</div>
+
+</div>
+
+<script src="js/menu.js"></script>
+<script src="js/afa.js"></script>
+
+</body>
+</html>
+
+
+
+</body>
+</html>
+
+

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Dashboard | Admin Portal</title>
+    
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- Supabase Database Connection --><script src="js/supabase.js"></script>
+</head>
+<body class="admin-dashboard-bg">
+
+    <div class="sidebar">
+        <div class="brand">
+            <div class="shield">🛡️</div>
+            <h3>AdminHQ</h3>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="active" onclick="switchTab('overview')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Overview Analytics
+            </a>
+            <a href="#" onclick="switchTab('orders')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                Pending Orders
+            </a>
+            <a href="#" onclick="switchTab('pricing')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Pricing & Controls
+            </a>
+            <a href="#" onclick="switchTab('afa')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m19 8 2 2-4 4"/></svg>
+                AFA Management
+            </a>
+            <a href="#" onclick="switchTab('manual')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Manual Funding
+            </a>
+            <a href="#" onclick="switchTab('support')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>
+                Support Tickets
+            </a>
+            <a href="#" onclick="switchTab('users')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                User Database
+            </a>
+            <a href="#" onclick="switchTab('api')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z"/><circle cx="16.5" cy="7.5" r=".5"/></svg>
+                API & Alerts
+            </a>
+            <a href="#" onclick="switchTab('sms')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
+                SMS Broadcast
+            </a>
+            <a href="#" onclick="switchTab('profit')">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Profit Calculator
+            </a>
+        </div>
+        <button class="logout-btn" onclick="adminLogout()">Sign Out</button>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div class="user-info">
+                <h1>Command Center</h1>
+                <p>Welcome back, Administrator.</p>
+            </div>
+            <button class="refresh-btn" onclick="hardRefresh()" style="background:#2563eb; color:white; border:none; padding:10px 20px;">Synchronize Database</button>
+        </header>
+
+        <!-- OVERVIEW ANALYTICS SECTION -->
+        <section id="tab-overview" class="dashboard-panel active">
+            <div class="panel-header">
+                <h2>Real-Time Metrics</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">👤</div>
+                    <div class="stat-content">
+                        <p>Total Registered Users</p>
+                        <h3 id="metric-users">...</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">💳</div>
+                    <div class="stat-content">
+                        <p>Total Life Transactions</p>
+                        <h3 id="metric-tx">...</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">📈</div>
+                    <div class="stat-content">
+                        <p>Total Processing (Today)</p>
+                        <h3 id="metric-sales">...</h3>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">📦</div>
+                    <div class="stat-content">
+                        <p>Bundle Orders (Today)</p>
+                        <h3 id="metric-orders">...</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-header" style="margin-top: 40px;">
+                <h2>Recent Registrations</h2>
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Joined Info</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overviewRecentUsersBody">
+                        <tr><td colspan="4" class="state-msg">Loading recent recruits...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ADVANCED ORDERS SECTION -->
+        <section id="tab-orders" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>Advanced Order Management</h2>
+                <div class="metrics-counters" style="display:flex; gap:15px; font-weight:700;">
+                    <span style="color:#059669;">Selected: <span id="selectCounter">0</span></span>
+                    <span style="color:#2563eb;">Total Query Results: <span id="totalResultsCounter">0</span></span>
+                </div>
+            </div>
+
+            <!-- Complex Filtering Matrix -->
+            <div class="filter-bar" style="display:flex; gap:12px; margin-bottom: 20px; flex-wrap: wrap;">
+                <input type="text" id="filterPhone" placeholder="Search Phone Number..." class="admin-input">
+                <input type="date" id="filterDateFrom" class="admin-input">
+                <input type="date" id="filterDateTo" class="admin-input">
+                <select id="filterStatus" class="admin-input">
+                    <option value="">All Statuses</option>
+                    <option value="false" selected>Pending fulfillment (false)</option>
+                    <option value="true">Completed (true)</option>
+                </select>
+                <select id="filterProduct" class="admin-input">
+                    <option value="">All Products</option>
+                    <option value="MTN">MTN Data</option>
+                    <option value="Telecel">Telecel</option>
+                    <option value="AirtelTigo">AirtelTigo</option>
+                </select>
+                <button class="refresh-btn" onclick="applyOrderFilters()" style="background:#0f172a; color:white;">Apply Filters</button>
+            </div>
+
+            <!-- Bulk Control Matrix -->
+            <div class="mass-action-bar" style="display:flex; gap:12px; padding:15px; background:white; border:1px solid #e2e8f0; border-radius:10px; margin-bottom: 20px; align-items:center;">
+                <div style="border-right:1px solid #e2e8f0; padding-right:15px; display:flex; gap:10px;">
+                    <input type="number" id="autoSelectCount" placeholder="Auto-select # rows" class="admin-input" style="width:160px;">
+                    <button class="action-btn btn-view" onclick="autoSelectRows()">Select Rows</button>
+                </div>
+                <button class="action-btn btn-approve" onclick="massUpdateSelected()">Mass Fulfill Selected</button>
+                <button class="action-btn" style="background:#10b981; color:white;" onclick="exportSelectedToExcel()">Export Numbers+Volume to CSV</button>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllOrders" onclick="toggleAllOrders(this)"></th>
+                            <th>Order ID</th>
+                            <th>Customer & Recipient</th>
+                            <th>Prod & Volume</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="7" class="state-msg">Loading comprehensive order matrix...</td></tr>
+                    </tbody>
+                </table>
+                <!-- Pagination -->
+                <div id="orderPagination" style="padding: 15px; display: flex; justify-content: center; gap: 10px; border-top: 1px solid #e2e8f0;">
+                    <!-- Auto-generated page buttons will append here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MANUAL FUNDING SECTION -->
+        <section id="tab-manual" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>Manual Transfers to Approve</h2>
+                <button class="refresh-btn" onclick="loadManualFunding()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Tx ID / Ref</th>
+                            <th>User Email</th>
+                            <th>Amount (₵)</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manualTableBody">
+                        <tr><td colspan="5" class="state-msg">Loading manual funding...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SUPPORT TICKETS SECTION -->
+        <section id="tab-support" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>Active Support Tickets</h2>
+                <button class="refresh-btn" onclick="loadSupportTickets()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket ID</th>
+                            <th>User Phone</th>
+                            <th>Issue</th>
+                            <th>Screenshot</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supportTableBody">
+                        <tr><td colspan="5" class="state-msg">Loading support tickets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- USERS OVERVIEW SECTION -->
+        <section id="tab-users" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>User Database</h2>
+                <button class="refresh-btn" onclick="loadUsers()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Wallet Bal.</th>
+                            <th>Role</th>
+                            <th>Change Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="7" class="state-msg">Loading internal user database...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CREDIT/DEBIT MODAL -->
+            <div id="walletModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:16px; padding:30px; max-width:420px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+                    <h3 id="walletModalTitle" style="margin:0 0 8px; font-size:18px; color:#1e293b;">💳 Credit/Debit User</h3>
+                    <p id="walletModalUser" style="color:#64748b; font-size:13px; margin:0 0 20px;"></p>
+                    <div style="display:flex; gap:8px; margin-bottom:16px;">
+                        <button id="creditTabBtn" onclick="setWalletAction('credit')" style="flex:1; padding:10px; border:2px solid #10b981; background:rgba(16,185,129,0.1); color:#10b981; border-radius:8px; font-weight:700; cursor:pointer;">+ Credit</button>
+                        <button id="debitTabBtn" onclick="setWalletAction('debit')" style="flex:1; padding:10px; border:2px solid #e2e8f0; background:white; color:#64748b; border-radius:8px; font-weight:700; cursor:pointer;">− Debit</button>
+                    </div>
+                    <label style="font-size:13px; font-weight:600; color:#475569; display:block; margin-bottom:6px;">Amount (₵)</label>
+                    <input type="number" id="walletAmount" step="0.01" min="0.01" placeholder="0.00" style="width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:8px; font-size:16px; box-sizing:border-box;">
+                    <label style="font-size:13px; font-weight:600; color:#475569; display:block; margin:12px 0 6px;">Reason (optional)</label>
+                    <input type="text" id="walletReason" placeholder="e.g., Bonus, Refund, Penalty" style="width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; box-sizing:border-box;">
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="closeWalletModal()" style="flex:1; padding:12px; border:1px solid #e2e8f0; background:white; color:#64748b; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
+                        <button id="walletSubmitBtn" onclick="submitWalletAction()" style="flex:1; padding:12px; border:none; background:#10b981; color:white; border-radius:8px; font-weight:700; cursor:pointer;">Confirm Credit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS MODAL -->
+            <div id="txModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:16px; padding:30px; max-width:700px; width:95%; max-height:80vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 id="txModalTitle" style="margin:0; font-size:18px; color:#1e293b;">📋 User Transactions</h3>
+                        <button onclick="closeTxModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8;">×</button>
+                    </div>
+                    <div id="txModalBody" style="font-size:13px;">
+                        <p style="color:#94a3b8;">Loading transactions...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRICING & GATEWAY CONTROLS SECTION -->
+        <section id="tab-pricing" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>Pricing & Gateway Controls</h2>
+                <button class="refresh-btn" onclick="loadPricingConfig()">Refresh Matrix</button>
+            </div>
+            <div id="pricingConfigBody">
+                <p>Loading database configurations...</p>
+            </div>
+        </section>
+
+        <!-- AFA MANAGEMENT SECTION -->
+        <section id="tab-afa" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>AFA Registrations</h2>
+                <button class="refresh-btn" onclick="loadAfa()">Refresh List</button>
+            </div>
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Tier Request</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="afaTableBody">
+                        <tr><td colspan="6" class="state-msg">Loading AFA requests...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- API & ALERTS SECTION -->
+        <section id="tab-api" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>API Keys & System Notifications</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="refresh-btn" style="background:#10b981; border:none; color:white;">+ Broadcast Alert</button>
+                    <button class="refresh-btn" onclick="loadApiKeys()">Refresh Keys</button>
+                </div>
+            </div>
+
+            <!-- DATA4GHANA API TOGGLE -->
+            <div style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid #475569;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h3 style="color: #f1f5f9; margin: 0 0 6px 0; font-size: 16px;">⚡ Data4Ghana API Auto-Order</h3>
+                        <p style="color: #94a3b8; margin: 0; font-size: 13px;">When enabled, user data purchases are automatically sent to the Data4Ghana VTU API for instant fulfillment.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="apiStatusBadge" style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(239,68,68,0.15); color: #ef4444;">OFFLINE</span>
+                        <label style="position: relative; display: inline-block; width: 52px; height: 28px; cursor: pointer;">
+                            <input type="checkbox" id="apiAutoOrderToggle" onchange="toggleApiAutoOrder(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; border-radius: 28px; transition: .3s;"></span>
+                            <span id="apiToggleKnob" style="position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s;"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Merchant ID</th>
+                            <th>User Email</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="apiTableBody">
+                        <tr><td colspan="5" class="state-msg">Loading developer security keys...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SMS BROADCAST SECTION -->
+        <section id="tab-sms" class="dashboard-panel" style="padding:0;">
+            <iframe src="admin-sms.html" style="width:100%; height:calc(100vh - 80px); border:none;"></iframe>
+        </section>
+
+        <!-- PROFIT CALCULATOR SECTION -->
+        <section id="tab-profit" class="dashboard-panel">
+            <div class="panel-header">
+                <h2>Internal Profit Calculator & Analytics</h2>
+                <button class="action-btn" style="background:#10b981; color:white; padding:10px 20px;" onclick="downloadProfitCSV()">Download Profit CSV</button>
+            </div>
+            
+            <!-- Base Cost Configurator -->
+            <div style="background:white; padding:25px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom: 30px;">
+                <h3 style="margin-top:0; color:#0f172a; font-size:16px;">Set Internal Base Costs (₵)</h3>
+                <p style="font-size:13px; color:#64748b; margin-bottom: 20px;">Update wholesale network costs to calculate accurate mathematical margins.</p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:15px; margin-bottom:20px;">
+                    <div><label style="font-size:12px; font-weight:700;">1GB Cost</label><input type="number" id="base_1gb" class="admin-input" step="0.01"></div>
+                    <div><label style="font-size:12px; font-weight:700;">2GB Cost</label><input type="number" id="base_2gb" class="admin-input" step="0.01"></div>
+                    <div><label style="font-size:12px; font-weight:700;">5GB Cost</label><input type="number" id="base_5gb" class="admin-input" step="0.01"></div>
+                    <div><label style="font-size:12px; font-weight:700;">10GB Cost</label><input type="number" id="base_10gb" class="admin-input" step="0.01"></div>
+                    <div><label style="font-size:12px; font-weight:700;">15GB Cost</label><input type="number" id="base_15gb" class="admin-input" step="0.01"></div>
+                </div>
+                <button class="action-btn btn-view" onclick="saveBaseCosts()">Save Base Costs to System</button>
+            </div>
+
+            <!-- Report Generator -->
+            <div class="panel-header">
+                <h2>Margin Report Generator</h2>
+                <div class="metrics-counters" style="display:flex; gap:15px; font-weight:700; font-size:18px;">
+                    <span style="color:#0f172a;">Total Net Profit: <span id="totalProfitCounter" style="color:#059669;">₵0.00</span></span>
+                </div>
+            </div>
+            <div class="filter-bar" style="display:flex; gap:12px; margin-bottom: 20px; flex-wrap: wrap;">
+                <input type="date" id="profitDateFrom" class="admin-input">
+                <input type="date" id="profitDateTo" class="admin-input">
+                <select id="profitProduct" class="admin-input">
+                    <option value="">All Products</option>
+                    <option value="MTN">MTN Data</option>
+                    <option value="Telecel">Telecel</option>
+                    <option value="AirtelTigo">AirtelTigo</option>
+                </select>
+                <select id="profitRole" class="admin-input">
+                    <option value="">All User Roles</option>
+                    <option value="client">Client</option>
+                    <option value="elite agent">Elite Agent</option>
+                    <option value="super agent">Super Agent</option>
+                </select>
+                <button class="refresh-btn" onclick="generateProfitReport()" style="background:#0f172a; color:white;">Run Analytics</button>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table" id="profitReportTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Charged (₵)</th>
+                            <th>Base Cost (₵)</th>
+                            <th>Net Profit (₵)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profitTableBody">
+                        <tr><td colspan="6" class="state-msg">Enter filters above to generate margin report.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Image Modal for Support Screenshots -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImg">
+    </div>
+
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>
+
+

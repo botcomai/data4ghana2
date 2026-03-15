@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Support - Data4Ghana</title>
+    
+    <link rel="stylesheet" href="css/menu.css">
+    <link rel="stylesheet" href="css/support.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <!-- Supabase Database Connection --><script src="js/supabase.js"></script>
+</head>
+<body>
+
+    <div id="menu-container"></div>
+
+    <div class="container main-content">
+        <div class="header">
+            <h2>Technical Support</h2>
+            <p>Our support team is here to assist you with any issues you may have. Please provide as much detail as possible to help us resolve your issue quickly.</p>
+        </div>
+
+        <div class="support-grid">
+            <!-- TICKET SUBMISSION FORM -->
+            <div class="ticket-form card">
+                <h3>Submit New Issue</h3>
+                
+                <form id="supportForm">
+                    <div class="input-group">
+                        <label for="phone">Your Phone Number</label>
+                        <input type="tel" id="phone" placeholder="e.g. 0540000000" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="issue">Describe Your Issue</label>
+                        <textarea id="issue" rows="5" placeholder="Please explain the problem in detail..." required></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="screenshot">Upload Screenshot (Balance or Error)</label>
+                        <div class="file-drop-area" id="dropArea">
+                            <span class="file-msg">Drag & Drop or Click to Upload</span>
+                            <input type="file" id="screenshot" accept="image/*" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Submit Ticket</button>
+                </form>
+            </div>
+
+            <!-- TICKET HISTORY -->
+            <div class="ticket-history card">
+                <h3>Your Active Tickets</h3>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #8592a3;">Loading tickets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/menu.js"></script>
+    <script src="js/support.js"></script>
+</body>
+</html>
+
+

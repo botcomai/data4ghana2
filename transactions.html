@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Transactions</title>
+
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/transactions.css">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<!-- Supabase Database Connection --><script src="js/supabase.js"></script>
+
+</head>
+
+<body>
+
+<button class="menu-btn" onclick="openMenu()">☰</button>
+
+<div id="menu-container"></div>
+
+<div class="container">
+
+<h2>💳 Transactions</h2>
+<p class="subtitle">Manage your wallet transaction services</p>
+
+<!-- SEARCH AREA -->
+
+<div class="search-box">
+
+<input type="text" id="searchInput"
+placeholder="Search by ID, Type, Reference">
+
+<select id="typeFilter">
+<option value="">All Types</option>
+<option value="Deposit">Deposit</option>
+<option value="Purchase">Purchase</option>
+<option value="Refund">Refund</option>
+</select>
+
+<select id="statusFilter">
+<option value="">All Status</option>
+<option value="Completed">Completed</option>
+<option value="Pending">Pending</option>
+<option value="Failed">Failed</option>
+</select>
+
+<input type="date" id="dateFilter">
+
+</div>
+
+<!-- TABLE -->
+
+<div class="table-box">
+
+<table>
+
+<thead>
+
+<tr>
+<th>TYPE</th>
+<th>AMOUNT</th>
+<th>BAL BEFORE</th>
+<th>BAL AFTER</th>
+<th>STATUS</th>
+<th>REFERENCE</th>
+<th>DATE</th>
+<th>ACTION</th>
+</tr>
+
+</thead>
+
+<tbody id="transactionsTable">
+
+<tr class="empty">
+<td colspan="8">No transactions found</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script src="js/menu.js"></script>
+<script src="js/transactions.js"></script>
+
+</body>
+</html>
+
+

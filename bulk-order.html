@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Data Order | Data4Ghana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/bulk-order.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Supabase Database Connection -->
+  <script src="js/supabase.js"></script>
+</head>
+<body>
+
+<div id="menu-container"></div>
+
+<div class="bulk-page">
+
+  <!-- PAGE HEADER -->
+  <div class="bulk-header">
+    <div>
+      <h1>📋 Bulk Data Order</h1>
+      <p>Order data for multiple recipients at once</p>
+    </div>
+    <a href="buy-data.html" class="back-link">← Single Order</a>
+  </div>
+
+  <!-- USER INFO BANNER -->
+  <div class="user-banner" id="userBanner" style="display:none;">
+    <div class="banner-left">
+      <div class="banner-avatar" id="bannerAvatar">D4</div>
+      <div>
+        <div class="banner-name" id="bannerName">Loading...</div>
+        <div class="banner-email" id="bannerEmail">—</div>
+      </div>
+    </div>
+    <div class="banner-right">
+      <span class="role-badge" id="bannerRole">—</span>
+      <div class="banner-stat">
+        <span class="stat-label">Rate</span>
+        <span class="stat-value green" id="bannerRate">₵—/GB</span>
+      </div>
+      <div class="banner-stat">
+        <span class="stat-label">Wallet</span>
+        <span class="stat-value" id="bannerWallet">₵0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bulk-grid">
+
+    <!-- LEFT: FORM PANEL -->
+    <div class="form-panel">
+
+      <!-- NETWORK -->
+      <div class="form-section">
+        <label class="form-label">Network <span class="label-hint">(applies to all orders)</span></label>
+        <div class="network-row" id="networkRow">
+          <div class="net-card active" onclick="selectNet(this)" data-net="MTN">
+            <img src="images/mtn.png" alt="MTN">
+            <span>MTN</span>
+          </div>
+          <div class="net-card" onclick="selectNet(this)" data-net="Telecel">
+            <img src="images/telecel.png" alt="Telecel">
+            <span>Telecel</span>
+          </div>
+          <div class="net-card" onclick="selectNet(this)" data-net="Ishare">
+            <img src="images/airteltigo.png" alt="Ishare">
+            <span>Ishare</span>
+          </div>
+          <div class="net-card" onclick="selectNet(this)" data-net="Bigtime">
+            <img src="images/bigtime.png" alt="Bigtime">
+            <span>Bigtime</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMAT GUIDE -->
+      <div class="format-guide">
+        <div class="guide-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          Format Guide
+        </div>
+        <div class="guide-body">
+          <p>One order per line: <code>phone_number GB_size</code></p>
+          <div class="guide-examples">
+            <div class="guide-example">
+              <span class="ex-label">9-digit:</span>
+              <code>059623850 2</code>
+            </div>
+            <div class="guide-example">
+              <span class="ex-label">10-digit:</span>
+              <code>0559623850 5</code>
+            </div>
+            <div class="guide-example">
+              <span class="ex-label">11-digit:</span>
+              <code>23354912345 10</code>
+            </div>
+          </div>
+          <p class="guide-note">✅ Accepts 9–10 digit numbers &nbsp;·&nbsp; Invalid lines are skipped automatically</p>
+        </div>
+      </div>
+
+      <!-- TEXTAREA -->
+      <div class="form-section">
+        <div class="textarea-header">
+          <label class="form-label" style="margin:0;">Orders <span class="label-hint">(phone + GB per line)</span></label>
+          <div class="textarea-actions">
+            <button class="action-btn" onclick="clearOrders()">Clear</button>
+            <button class="action-btn" onclick="pasteFromClipboard()">Paste</button>
+          </div>
+        </div>
+        <textarea
+          id="ordersInput"
+          rows="12"
+          placeholder="0559623850 2&#10;0241234567 5&#10;059623850 10&#10;0301234567 1&#10;..."
+          oninput="parseAndPreview()"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <!-- LIVE STATS BAR -->
+      <div class="stats-bar" id="statsBar" style="display:none;">
+        <div class="sbar-item">
+          <span class="sbar-num" id="statValid">0</span>
+          <span class="sbar-label">Valid Orders</span>
+        </div>
+        <div class="sbar-divider"></div>
+        <div class="sbar-item">
+          <span class="sbar-num warning" id="statSkipped">0</span>
+          <span class="sbar-label">Skipped</span>
+        </div>
+        <div class="sbar-divider"></div>
+        <div class="sbar-item">
+          <span class="sbar-num blue" id="statGB">0GB</span>
+          <span class="sbar-label">Total Data</span>
+        </div>
+        <div class="sbar-divider"></div>
+        <div class="sbar-item">
+          <span class="sbar-num green" id="statCost">₵0.00</span>
+          <span class="sbar-label">Total Cost</span>
+        </div>
+      </div>
+
+      <!-- WALLET WARNING -->
+      <div class="wallet-warning" id="walletWarning" style="display:none;">
+        ⚠️ <span id="walletWarningText">Insufficient wallet balance.</span>
+        <a href="wallet.html" style="color:#b45309; text-decoration:underline; margin-left:6px;">Top Up →</a>
+      </div>
+
+      <!-- SUBMIT BUTTON -->
+      <button class="submit-btn" id="submitBtn" onclick="submitBulkOrder()" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+        Place Bulk Order
+      </button>
+
+    </div>
+
+    <!-- RIGHT: ORDER PREVIEW TABLE -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <h3>Order Preview</h3>
+        <span class="preview-badge" id="previewBadge">0 orders</span>
+      </div>
+      <div id="previewTable">
+        <div class="preview-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          <p>Paste your orders on the left to preview them here</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFIRMATION OVERLAY -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-icon">📦</div>
+    <h3 id="confirmTitle">Confirm Bulk Order</h3>
+    <p id="confirmBody">—</p>
+    <div class="confirm-detail" id="confirmDetail"></div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="executeBulkOrder()">✅ Confirm &amp; Pay</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay-bulk" id="successOverlay">
+  <div class="success-modal-bulk">
+    <div class="success-icon-bulk" id="successIcon">✓</div>
+    <h3 id="successTitle">Orders Placed!</h3>
+    <p id="successBody">Your bulk data orders are being processed.</p>
+    <div class="success-receipt" id="successReceipt"></div>
+    <button class="btn-done" onclick="closeBulkSuccess()">Done</button>
+  </div>
+</div>
+
+<script src="js/menu.js"></script>
+<script src="js/bulk-order.js"></script>
+</body>
+</html>
+
+

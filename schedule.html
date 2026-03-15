@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schedule | Data4Ghana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/schedule.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Supabase Database Connection -->
+  <script src="js/supabase.js"></script>
+</head>
+<body>
+
+<div id="menu-container"></div>
+
+<div class="sched-page">
+
+  <!-- HEADER -->
+  <div class="sched-header">
+    <div>
+      <h1>📅 Scheduled Deliveries</h1>
+      <p>Orders queued because a pending delivery already exists for the same number</p>
+    </div>
+    <div class="header-actions">
+      <a href="bulk-order.html" class="hdr-btn secondary">+ New Bulk Order</a>
+      <button class="hdr-btn primary" onclick="processAllScheduled()" id="processAllBtn">
+        ▶ Process All Now
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="sched-stats" id="schedStats" style="display:none;">
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Total Scheduled</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-num" id="statGB">0GB</div>
+      <div class="stat-label">Total Data</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-num" id="statCost">₵0.00</div>
+      <div class="stat-label">Total Cost</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-num" id="statMultiple">0</div>
+      <div class="stat-label">Multiple Orders</div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="sched-filters">
+    <input type="text" id="filterPhone" placeholder="🔍 Search by phone…" oninput="filterOrders()">
+    <select id="filterNetwork" onchange="filterOrders()">
+      <option value="">All Networks</option>
+      <option>MTN</option>
+      <option>Telecel</option>
+      <option>Ishare</option>
+      <option>Bigtime</option>
+    </select>
+    <button class="filter-clear" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <!-- ORDERS TABLE -->
+  <div class="sched-table-wrap">
+    <div class="sched-table-header">
+      <div class="th-check">
+        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+      </div>
+      <div class="th">Phone</div>
+      <div class="th">Network</div>
+      <div class="th">Plan</div>
+      <div class="th">Amount</div>
+      <div class="th">Type</div>
+      <div class="th">Scheduled At</div>
+      <div class="th">Actions</div>
+    </div>
+
+    <div id="schedOrders">
+      <div class="sched-empty" id="loadingState">
+        <div class="spinner"></div>
+        <p>Loading scheduled orders…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK ACTION BAR -->
+  <div class="bulk-action-bar" id="bulkActionBar" style="display:none;">
+    <span id="selectedCount">0 selected</span>
+    <button class="action-process" onclick="processSelected()">▶ Process Selected</button>
+    <button class="action-delete"  onclick="deleteSelected()">🗑 Delete Selected</button>
+  </div>
+
+</div>
+
+<!-- CONFIRMATION MODAL -->
+<div class="modal-overlay" id="processModal">
+  <div class="modal-box">
+    <div class="modal-icon">⚡</div>
+    <h3 id="modalTitle">Process Scheduled Orders</h3>
+    <p id="modalBody">—</p>
+    <div class="modal-detail" id="modalDetail"></div>
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="mbtn-ok" id="modalConfirmBtn" onclick="confirmProcessOrders()">✅ Process Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST (injected by JS) -->
+
+<script src="js/menu.js"></script>
+<script src="js/schedule.js"></script>
+</body>
+</html>
+
+
