@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fund Wallet — Data4Ghana</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/wallet.css">
+<link rel="stylesheet" href="css/menu.css">
+
+<!-- Paystack -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="js/supabase.js"></script>
+
+<style>
+/* ─── DESIGN SYSTEM ─────────────────────────────────────── */
+:root {
+  --bg-base:       #ffffff; /* Clean White Background */
+  --bg-card:       #ffffff;
+  --bg-elevated:   #f8fafc;
+  --border:        rgba(15, 23, 42, 0.08);
+  --accent:        #d97706;
+  --accent-soft:   rgba(217, 119, 6, 0.05);
+  --accent-border: rgba(217, 119, 6, 0.15);
+  --blue:          #2563eb;
+  --blue-soft:     rgba(37, 99, 235, 0.06);
+  --green:         #10b981;
+  --green-soft:    rgba(16, 185, 129, 0.06);
+  --red:           #ef4444;
+  --red-soft:      rgba(239, 68, 68, 0.06);
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
+  --r-sm:          12px;
+  --r-md:          18px;
+  --r-lg:          24px;
+  --r-xl:          32px;
+  --shadow-sm:     0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow:        0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-lg:     0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
+  --font:          'Sora', sans-serif;
+  --mono:          'DM Mono', monospace;
+  --ease:          all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --glass:         blur(16px) saturate(180%);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Airy Background Accents */
+body::before {
+  content: '';
+  position: fixed;
+  top: -10%; left: -10%;
+  width: 50%; height: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.03) 0%, transparent 70%);
+  z-index: -1;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -10%; right: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.03) 0%, transparent 70%);
+  z-index: -1;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.2); }
+
+/* ─── PAGE WRAPPER ──────────────────────────────────────── */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  animation: fadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE HEADER ───────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.page-header-icon {
+  width: 52px; height: 52px;
+  background: var(--blue-soft);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--blue);
+}
+
+.page-header h1 {
+  font-size: 26px; font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.8px;
+}
+
+.page-header p {
+  font-size: 14px; color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ─── BALANCE CARD ──────────────────────────────────────── */
+.balance-card {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border-radius: var(--r-xl);
+  padding: 34px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-card::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.balance-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.balance-amount {
+  font-size: 48px; font-weight: 800;
+  color: #ffffff;
+  font-family: var(--font);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+
+.balance-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.balance-badge {
+  padding: 6px 14px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 12px; font-weight: 600;
+  color: #fff;
+}
+
+.balance-badge.live {
+  background: #ecfdf5;
+  border-color: #d1fae5;
+  color: #059669;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.balance-badge.live::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ─── SECTION CARDS ─────────────────────────────────────── */
+.s-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 30px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  transition: var(--ease);
+}
+
+.s-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.s-card-title {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.s-card-title svg {
+  color: var(--blue);
+}
+
+/* ─── PAYMENT METHODS ───────────────────────────────────── */
+.methods-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.method {
+  background: var(--bg-elevated);
+  border: 2px solid transparent;
+  border-radius: var(--r-md);
+  padding: 20px;
+  cursor: pointer;
+  transition: var(--ease);
+  position: relative;
+}
+
+.method:hover {
+  background: #f1f5f9;
+}
+
+.method.selected-paystack {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.method.selected-manual {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.method-check {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--ease);
+}
+
+.selected-paystack .method-check { background: var(--blue); border-color: var(--blue); }
+.selected-manual .method-check { background: var(--accent); border-color: var(--accent); }
+
+.method-icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.method h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.method p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+.method-networks {
+  display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;
+}
+
+.network-tag {
+  font-size: 10px; font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.tag-mtn    { background: #fef08a; color: #854d0e; }
+.tag-voda   { background: #fecaca; color: #991b1b; }
+.tag-tigo   { background: #bfdbfe; color: #1e40af; }
+.tag-card   { background: #bbf7d0; color: #166534; }
+
+/* ─── AMOUNT INPUT ──────────────────────────────────────── */
+.amount-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.amount-prefix {
+  position: absolute;
+  left: 20px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 24px; font-weight: 700;
+  color: var(--text-muted);
+}
+
+#amount {
+  width: 100%;
+  padding: 20px 20px 20px 50px;
+  font-family: var(--font);
+  font-size: 32px; font-weight: 800;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  outline: none;
+  transition: var(--ease);
+  letter-spacing: -1px;
+}
+
+#amount:focus {
+  border-color: var(--blue);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.quick-amounts {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+
+.quick-btn {
+  padding: 8px 18px;
+  border-radius: 30px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--ease);
+  font-size: 14px;
+}
+
+.quick-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-soft);
+  transform: translateY(-1px);
+}
+
+/* ─── FEE BREAKDOWN ─────────────────────────────────────── */
+#feeBreakdown {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.fee-row {
+  display: flex; justify-content: space-between; padding: 8px 0;
+  font-size: 14px; color: var(--text-secondary);
+}
+
+.fee-row.total {
+  border-top: 1px dashed #e2e8f0;
+  margin-top: 12px; padding-top: 16px;
+  font-weight: 800; font-size: 18px; color: var(--text-primary);
+}
+
+.fee-value-red { color: var(--red); }
+.fee-value-total { color: var(--blue); }
+
+/* ─── MANUAL DETAILS ────────────────────────────────────── */
+.agent-card {
+  background: #fffcf0;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.agent-row {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--accent-border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.agent-row:last-child { border-bottom: none; }
+
+.agent-row-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+.agent-row-value { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+.agent-row-value.large { font-size: 24px; letter-spacing: 1px; color: var(--accent); }
+
+#refBox {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: var(--r-md);
+  padding: 20px;
+  margin-top: 20px;
+}
+
+#refId { font-size: 28px; font-weight: 900; color: var(--blue); display: block; margin: 10px 0; }
+
+.ref-warning {
+  background: #fff;
+  color: var(--red);
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex; gap: 8px; line-height: 1.5;
+}
+
+/* ─── BUTTONS ───────────────────────────────────────────── */
+#fundBtn {
+  width: 100%;
+  padding: 20px;
+  border-radius: var(--r-md);
+  border: none;
+  font-size: 17px; font-weight: 800;
+  cursor: pointer;
+  transition: var(--ease);
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-top: 24px;
+}
+
+.paystack-btn {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+}
+
+.paystack-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(37, 99, 235, 0.3);
+}
+
+/* ─── TOAST ─────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #0f172a;
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 50px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  transition: var(--ease);
+  z-index: 1000;
+}
+
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 500px) {
+  .methods-grid { grid-template-columns: 1fr; }
+  .balance-amount { font-size: 38px; }
+  .container { padding: 20px 16px 60px; }
+  .s-card { padding: 20px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu-container"></div>
+
+<div class="container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7"/><path d="M16 19h6"/><path d="M19 16v6"/><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    </div>
+    <div>
+      <h1>Fund Wallet</h1>
+      <p>Instant deposit to your Data4Ghana account</p>
+    </div>
+  </div>
+
+  <!-- BALANCE CARD -->
+  <div class="balance-card">
+    <div class="balance-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+      AVAILABLE BALANCE
+    </div>
+    <div class="balance-amount" id="walletBalance">₵0.00</div>
+    <div class="balance-footer">
+      <span class="balance-badge live">System Online</span>
+      <span class="balance-badge">Secure Wallet</span>
+    </div>
+  </div>
+
+  <!-- PAYMENT METHOD -->
+  <div class="s-card">
+    <div class="s-card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      SELECT DEPOSIT METHOD
+    </div>
+
+    <div class="methods-grid">
+      <!-- Paystack -->
+      <div class="method selected-paystack" id="optPaystack" onclick="selectMethod('paystack')">
+        <div class="method-check">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="method-icon">🚀</div>
+        <h4>Paystack</h4>
+        <p>Cards, MoMo & Instant Auto-Credit</p>
+        <div class="method-networks">
+          <span class="network-tag tag-mtn">MTN</span>
+          <span class="network-tag tag-voda">Voda</span>
+          <span class="network-tag tag-tigo">Tigo</span>
+          <span class="network-tag tag-card">VISA/MC</span>
+        </div>
+      </div>
+
+      <!-- Manual -->
+      <div class="method" id="optManual" onclick="selectMethod('manual')">
+        <div class="method-check"></div>
+        <div class="method-icon">🏢</div>
+        <h4>Agent Transfer</h4>
+        <p>Direct MoMo Transfer (Manual Approval)</p>
+        <div class="method-networks">
+          <span class="network-tag tag-mtn">MTN MoMo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMOUNT + BREAKDOWN -->
+  <div class="s-card">
+    <div class="s-card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      ENTER RECHARGE AMOUNT
+    </div>
+
+    <div class="amount-wrap">
+      <span class="amount-prefix">₵</span>
+      <input type="number" id="amount" placeholder="0.00" oninput="calculateFee()" min="1" />
+    </div>
+
+    <!-- Quick amounts -->
+    <div class="quick-amounts">
+      <button class="quick-btn" onclick="setAmount(10)">+₵10</button>
+      <button class="quick-btn" onclick="setAmount(20)">+₵20</button>
+      <button class="quick-btn" onclick="setAmount(50)">+₵50</button>
+      <button class="quick-btn" onclick="setAmount(100)">+₵100</button>
+      <button class="quick-btn" onclick="setAmount(200)">+₵200</button>
+      <button class="quick-btn" onclick="setAmount(500)">+₵500</button>
+    </div>
+
+    <!-- Fee Breakdown -->
+    <div id="feeBreakdown">
+      <div class="fee-row">
+        <span>Credit to Wallet</span>
+        <span id="baseAmount">₵0.00</span>
+      </div>
+      <div class="fee-row">
+        <span>Gateway Fee (2%)</span>
+        <span id="feeAmount" class="fee-value-red">₵0.00</span>
+      </div>
+      <div class="fee-row total">
+        <span>Total Payable</span>
+        <span id="totalAmount" class="fee-value-total">₵0.00</span>
+      </div>
+    </div>
+
+    <!-- Manual Transfer Details -->
+    <div id="manualDetails" style="display:none;">
+      <div class="manual-header" style="text-align:center; margin-bottom:24px;">
+        <h4 style="font-size:18px; color:var(--accent);">Transfer Instructions</h4>
+        <p style="font-size:13px; color:var(--text-secondary);">Send payment to the verified agent below</p>
+      </div>
+      <div class="agent-card">
+        <div class="agent-row">
+          <div>
+            <div class="agent-row-label">Merchant Name</div>
+            <div class="agent-row-value">Data4Ghana Enterprise</div>
+          </div>
+          <span style="font-size:24px;">🛡️</span>
+        </div>
+        <div class="agent-row">
+          <div>
+            <div class="agent-row-label">Account Number</div>
+            <div class="agent-row-value large" id="momoNumberInline">0241234567</div>
+          </div>
+          <button class="copy-btn" onclick="copyText('momoNumberInline')">Copy</button>
+        </div>
+        <div class="agent-row">
+          <div>
+            <div class="agent-row-label">Payment Method</div>
+            <div class="agent-row-value">MTN MoMo Pay</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Box -->
+    <div id="refBox" style="display:none;">
+      <div style="text-align:center; margin-bottom:12px;">
+        <div class="agent-row-label">Your Transaction ID</div>
+        <span id="refId"></span>
+        <button class="copy-btn" onclick="copyText('refId')" style="margin-top:10px;">Copy ID</button>
+      </div>
+      <div class="ref-warning">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        IMPORTANT: Include this Reference ID in your MoMo transfer note to ensure auto-credit.
+      </div>
+    </div>
+
+    <!-- Fund Button -->
+    <button id="fundBtn" class="paystack-btn" onclick="processFunding()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 5l14 14M19 5L5 19"/></svg>
+      Secure Deposit
+    </button>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Copied!</span>
+</div>
+
+<script src="js/menu.js"></script>
+<script src="js/wallet.js"></script>
+
+<script>
+
+/* ── LOAD WALLET ── */
+async function loadWallet() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { window.location.href = "login.html"; return; }
+
+  let { data } = await supabase
+    .from("users")
+    .select("wallet_balance")
+    .eq("id", user.id)
+    .single();
+
+  if (data) {
+    document.getElementById("walletBalance").innerText =
+      "₵" + parseFloat(data.wallet_balance).toFixed(2);
+  }
+}
+
+/* ── PAYMENT METHOD ── */
+let paymentMethod = "paystack";
+
+function selectMethod(method) {
+  paymentMethod = method;
+
+  if (method === "paystack") {
+    document.getElementById("optPaystack").classList.add("selected-paystack");
+    document.getElementById("optManual").classList.remove("selected-manual");
+    document.getElementById("optManual").querySelector(".method-check").innerHTML = '';
+    document.getElementById("manualDetails").style.display = "none";
+    document.getElementById("refBox").style.display = "none";
+
+    const btn = document.getElementById("fundBtn");
+    btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Fund with Paystack`;
+    btn.className = "paystack-btn";
+
+    const amt = document.getElementById("amount").value;
+    document.getElementById("feeBreakdown").style.display = amt > 0 ? "block" : "none";
+    calculateFee();
+
+  } else {
+    document.getElementById("optManual").classList.add("selected-manual");
+    document.getElementById("optPaystack").classList.remove("selected-paystack");
+    document.getElementById("optPaystack").querySelector(".method-check").innerHTML = '';
+
+    document.getElementById("feeBreakdown").style.display = "none";
+    document.getElementById("manualDetails").style.display = "block";
+
+    let randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+    document.getElementById("refId").innerText = "D4G-" + randomChars;
+    document.getElementById("refBox").style.display = "block";
+
+    const btn = document.getElementById("fundBtn");
+    btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.88a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Submit Manual Request`;
+    btn.className = "manual-btn";
+
+    // Set correct check marks
+    document.getElementById("optManual").querySelector(".method-check").innerHTML =
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    document.getElementById("optPaystack").querySelector(".method-check").innerHTML = '';
+  }
+}
+
+/* ── QUICK AMOUNTS ── */
+function setAmount(val) {
+  document.getElementById("amount").value = val;
+  calculateFee();
+}
+
+/* ── COPY TEXT ── */
+function copyText(elementId) {
+  const text = document.getElementById(elementId).innerText;
+  const btn = event.currentTarget;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copied';
+    showToast('Copied to clipboard', 'green');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 2000);
+  }).catch(() => alert('Failed to copy.'));
+}
+
+/* ── TOAST ── */
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = ''; }, 2600);
+}
+
+/* ── FEE CALCULATION ── */
+function calculateFee() {
+  const amountInput = parseFloat(document.getElementById("amount").value);
+  if (isNaN(amountInput) || amountInput <= 0) {
+    document.getElementById("feeBreakdown").style.display = "none";
+    return;
+  }
+  if (paymentMethod === "paystack") {
+    document.getElementById("feeBreakdown").style.display = "block";
+    const fee   = amountInput * 0.02;
+    const total = amountInput + fee;
+    document.getElementById("baseAmount").innerText  = "₵" + amountInput.toFixed(2);
+    document.getElementById("feeAmount").innerText   = "₵" + fee.toFixed(2);
+    document.getElementById("totalAmount").innerText = "₵" + total.toFixed(2);
+  }
+}
+
+/* ── PROCESS FUNDING ── */
+function processFunding() {
+  if (paymentMethod === "paystack") {
+    payWithPaystack();
+  } else {
+    submitManualRequest();
+  }
+}
+
+loadWallet();
+</script>
+
+</body>
+</html>

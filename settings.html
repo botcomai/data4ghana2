@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Settings — Data4Ghana</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/settings.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="js/supabase.js"></script>
+
+<style>
+/* ─── DESIGN SYSTEM ────────────────────────────────────── */
+:root {
+  --bg-base:       #f4f6fa;
+  --bg-surface:    #ffffff;
+  --bg-card:       #ffffff;
+  --bg-elevated:   #eef1f7;
+  --border:        #e2e8f0;
+  --border-accent: rgba(217,119,6,0.3);
+  --accent:        #d97706;
+  --accent-soft:   rgba(245,158,11,0.10);
+  --blue:          #2563eb;
+  --blue-soft:     rgba(37,99,235,0.09);
+  --green:         #059669;
+  --green-soft:    rgba(5,150,105,0.09);
+  --purple:        #7c3aed;
+  --red:           #dc2626;
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
+  --sidebar-w:     260px;
+  --r-sm:          8px;
+  --r-md:          14px;
+  --r-lg:          20px;
+  --r-xl:          26px;
+  --shadow:        0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  --font:          'Sora', sans-serif;
+  --mono:          'DM Mono', monospace;
+  --ease:          all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* ─── SIDEBAR ──────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-w);
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, #7c3aed 50%, var(--green) 100%);
+  flex-shrink: 0;
+}
+
+.profile {
+  padding: 22px 18px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.avatar {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.2);
+}
+
+.avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.profile-info { flex: 1; min-width: 0; }
+
+#sidebarName {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-size: 10.5px !important;
+  color: var(--text-muted) !important;
+  margin: 3px 0 8px !important;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+#sidebarMerchant {
+  display: inline-block;
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  font-family: var(--mono);
+  border: 1px solid var(--border-accent);
+}
+
+#sidebarRole {
+  display: inline-block !important;
+  margin-left: 5px !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+}
+
+.menu { list-style: none; padding: 16px 10px; flex: 1; }
+
+.menu-label {
+  font-size: 9.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  color: var(--text-muted) !important;
+  font-weight: 700 !important;
+  padding: 18px 10px 7px !important;
+  display: block;
+}
+
+.menu > li > a,
+.menu-item-disabled {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  transition: var(--ease);
+}
+
+.menu > li > a:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.menu > li > a svg { opacity: 0.45; flex-shrink: 0; }
+.menu > li > a:hover svg { opacity: 0.8; }
+
+.menu > li > a.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--border-accent);
+}
+.menu > li > a.active svg { opacity: 1; }
+
+.menu-item-disabled { opacity: 0.38; cursor: not-allowed; }
+
+.coming-soon-badge {
+  margin-left: auto;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+/* Finance Dropdown */
+.nav-dropdown { list-style: none; }
+
+.nav-dropdown-trigger {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-size: 13px; font-weight: 500;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: var(--ease);
+  user-select: none;
+}
+
+.nav-dropdown-trigger:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.nav-dropdown-trigger > span { display: flex; align-items: center; gap: 11px; }
+.nav-dropdown-trigger svg { opacity: 0.45; }
+
+.dropdown-arrow { transition: transform 0.28s ease; opacity: 0.4; flex-shrink: 0; }
+.nav-dropdown.open .dropdown-arrow { transform: rotate(180deg); opacity: 0.8; }
+.nav-dropdown.open .nav-dropdown-trigger { background: var(--blue-soft); color: var(--blue); }
+
+.nav-dropdown-items {
+  list-style: none; padding: 0;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.32s ease;
+}
+.nav-dropdown.open .nav-dropdown-items { max-height: 200px; }
+
+.nav-dropdown-items li a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px 9px 30px;
+  color: var(--text-muted);
+  font-size: 12.5px; font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--r-sm);
+  transition: var(--ease);
+}
+.nav-dropdown-items li a:hover {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding-left: 34px;
+}
+.nav-dropdown-items li a svg { opacity: 0.5; flex-shrink: 0; }
+
+.logout-box { padding: 14px 10px; border-top: 1px solid var(--border); }
+
+.logout-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(220,38,38,0.06);
+  color: #dc2626;
+  border: 1px solid rgba(220,38,38,0.15);
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+  transition: var(--ease);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.logout-btn:hover { background: rgba(220,38,38,0.11); color: #b91c1c; transform: translateY(-1px); }
+
+#overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+}
+#overlay.show { display: block; }
+
+/* ─── MAIN CONTENT ─────────────────────────────────────── */
+.container {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: 42px 38px 60px;
+  max-width: 860px;
+  animation: fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE HEADER ──────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.page-header-icon {
+  width: 46px; height: 46px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-accent);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.page-header h1 {
+  font-size: 22px; font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* ─── SECTION TABS ─────────────────────────────────────── */
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  background: var(--bg-elevated);
+  border-radius: var(--r-md);
+  padding: 5px;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 12.5px; font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  color: var(--text-primary);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.09);
+}
+
+.tab-btn:hover:not(.active) { color: var(--text-secondary); }
+
+/* ─── SETTINGS PANEL ───────────────────────────────────── */
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+
+/* ─── CARD ─────────────────────────────────────────────── */
+.s-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 28px 30px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.s-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.s-card-title {
+  font-size: 14.5px; font-weight: 700;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 10px;
+}
+
+.s-card-title svg { color: var(--accent); opacity: 0.8; }
+
+.s-card-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+/* ─── PROFILE PICTURE UPLOAD ───────────────────────────── */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.avatar-preview-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-preview {
+  width: 100px; height: 100px;
+  border-radius: 22px;
+  object-fit: cover;
+  display: block;
+  border: 3px solid var(--border);
+  background: linear-gradient(135deg, #f59e0b22, #d9770622);
+  transition: var(--ease);
+}
+
+.avatar-preview-placeholder {
+  width: 100px; height: 100px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--accent-soft), rgba(124,58,237,0.08));
+  border: 3px dashed var(--border-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  transition: var(--ease);
+  cursor: pointer;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  bottom: -6px; right: -6px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2.5px solid #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: var(--ease);
+  box-shadow: 0 2px 8px rgba(217,119,6,0.35);
+}
+
+.avatar-edit-badge:hover { transform: scale(1.1); background: #b45309; }
+.avatar-edit-badge svg { color: #fff; }
+
+.avatar-info { flex: 1; }
+
+.avatar-info h3 {
+  font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.avatar-info p {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.avatar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Drop Zone */
+.drop-zone {
+  margin-top: 22px;
+  border: 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--ease);
+  background: var(--bg-elevated);
+  position: relative;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%; height: 100%;
+}
+
+.drop-zone-icon {
+  width: 48px; height: 48px;
+  background: var(--accent-soft);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  color: var(--accent);
+  transition: var(--ease);
+}
+
+.drop-zone:hover .drop-zone-icon,
+.drop-zone.drag-over .drop-zone-icon {
+  background: rgba(217,119,6,0.18);
+  transform: scale(1.05);
+}
+
+.drop-zone h4 {
+  font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.drop-zone p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.drop-zone span {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Upload progress */
+.upload-progress {
+  display: none;
+  margin-top: 16px;
+}
+
+.progress-bar-wrap {
+  background: var(--bg-elevated);
+  border-radius: 99px;
+  height: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #f59e0b);
+  border-radius: 99px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Image crop preview */
+.crop-preview-section {
+  display: none;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--bg-elevated);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+}
+
+.crop-preview-section.visible { display: block; }
+
+.crop-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.crop-header h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.preview-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.preview-size-label {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.preview-circle, .preview-square, .preview-square-sm {
+  border: 2px solid var(--border);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.preview-circle    { width: 64px; height: 64px; border-radius: 50%; }
+.preview-square    { width: 64px; height: 64px; border-radius: 14px; }
+.preview-square-sm { width: 36px; height: 36px; border-radius: 8px; }
+
+/* ─── FORM FIELDS ──────────────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.form-grid.single { grid-template-columns: 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+
+.field label {
+  font-size: 12px; font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  font-family: var(--font);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  transition: var(--ease);
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.field input::placeholder,
+.field textarea::placeholder { color: var(--text-muted); }
+
+.field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: -2px;
+}
+
+/* ─── BUTTONS ──────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: var(--ease);
+  border: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(217,119,6,0.28);
+}
+.btn-primary:hover { background: #b45309; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(217,119,6,0.35); }
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: #e2e8f0; color: var(--text-primary); }
+
+.btn-danger {
+  background: rgba(220,38,38,0.07);
+  color: var(--red);
+  border: 1.5px solid rgba(220,38,38,0.18);
+}
+.btn-danger:hover { background: rgba(220,38,38,0.13); }
+
+.btn-success {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1.5px solid rgba(5,150,105,0.2);
+}
+.btn-success:hover { background: rgba(5,150,105,0.15); }
+
+.btn svg { flex-shrink: 0; }
+
+/* ─── FORM ACTIONS ─────────────────────────────────────── */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── TOAST NOTIFICATION ───────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--text-primary);
+  color: #fff;
+  padding: 13px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 999;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+}
+
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+
+/* ─── DANGER ZONE ──────────────────────────────────────── */
+.danger-zone {
+  border: 1.5px solid rgba(220,38,38,0.2);
+  border-radius: var(--r-xl);
+  padding: 24px 28px;
+  background: rgba(220,38,38,0.025);
+  margin-bottom: 20px;
+}
+
+.danger-zone .s-card-header { border-color: rgba(220,38,38,0.15); }
+.danger-zone .s-card-title { color: var(--red); }
+
+.danger-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.danger-item-info h4 { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.danger-item-info p  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* ─── SWITCH TOGGLE ────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 20px;
+}
+
+.toggle-row:last-child { border-bottom: none; }
+
+.toggle-info h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.toggle-info p  { font-size: 12px; color: var(--text-muted); }
+
+.toggle {
+  position: relative;
+  width: 42px; height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: var(--ease);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: var(--ease);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* ─── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+  .sidebar.open { transform: translateX(0); }
+  .container { margin-left: 0; padding: 24px 18px 50px; }
+  .avatar-section { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div id="menu-container">
+  <div id="sidebar" class="sidebar">
+    <div class="profile">
+      <div class="avatar" id="avatarBox">D4</div>
+      <div class="profile-info">
+        <h3 id="sidebarName">Data4Ghana</h3>
+        <p id="sidebarEmail" class="profile-email">loading email...</p>
+        <span id="sidebarMerchant" class="merchant-badge">MERCH-00...</span>
+        <span id="sidebarRole">CLIENT</span>
+      </div>
+    </div>
+
+    <ul class="menu" id="navMenu">
+      <li class="menu-label">Core</li>
+      <li><a href="dashboard.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Dashboard
+      </a></li>
+      <li><a href="buy-data.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Our Services
+      </a></li>
+      <li><a href="bulk-order.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Bulk Order
+      </a></li>
+      <li><a href="schedule.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Schedule
+      </a></li>
+      <li><a href="afa.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        AFA Registration
+      </a></li>
+      <li>
+        <span class="menu-item-disabled">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5Z"/></svg>
+          WAEC Checking
+          <span class="coming-soon-badge">Soon</span>
+        </span>
+      </li>
+      <li class="nav-dropdown" id="financeDropdown">
+        <div class="nav-dropdown-trigger" onclick="toggleDropdown('financeDropdown')">
+          <span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            Finance
+          </span>
+          <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <ul class="nav-dropdown-items">
+          <li><a href="wallet.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Fund Wallet
+          </a></li>
+          <li><a href="transactions.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Transactions
+          </a></li>
+          <li><a href="orders.html">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Order History
+          </a></li>
+        </ul>
+      </li>
+
+      <li class="menu-label">Settings</li>
+      <li><a href="support.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2l-4 4v-4Z"/></svg>
+        Technical Support
+      </a></li>
+      <li><a href="settings.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Account Settings
+      </a></li>
+      <li><a href="developer.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        API &amp; Dev Hub
+      </a></li>
+
+      <div id="adminMenuSection" style="display:none;">
+        <li class="menu-label">Admin</li>
+        <li><a href="admin-dashboard.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Dashboard
+        </a></li>
+        <li><a href="admin-sms.html">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5C2 7 4 5 6.5 5H18c2.2 0 4 1.8 4 4v8Z"/></svg>Bulk SMS Dashboard
+        </a></li>
+      </div>
+    </ul>
+
+    <div class="logout-box">
+      <button class="logout-btn" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+  <div id="overlay" onclick="closeMenu()"></div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+    <div>
+      <h1>Account Settings</h1>
+      <p>Manage your profile, security, and preferences</p>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="settings-tabs">
+    <button class="tab-btn active" onclick="switchTab('profile')">Profile</button>
+    <button class="tab-btn" onclick="switchTab('security')">Security</button>
+    <button class="tab-btn" onclick="switchTab('notifications')">Notifications</button>
+  </div>
+
+  <!-- ══ TAB: PROFILE ══ -->
+  <div id="tab-profile" class="settings-panel active">
+
+    <!-- Profile Photo Card -->
+    <div class="s-card">
+      <div class="s-card-header">
+        <div>
+          <div class="s-card-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profile Photo
+          </div>
+          <div class="s-card-subtitle">Your photo appears on your profile and in the sidebar</div>
+        </div>
+      </div>
+
+      <!-- Current photo + info -->
+      <div class="avatar-section">
+        <div class="avatar-preview-wrap">
+          <div class="avatar-preview-placeholder" id="settingsAvatarBox" onclick="triggerUpload()">
+            <span id="settingsInitials">👤</span>
+          </div>
+          <img id="avatarPreviewImg" class="avatar-preview" src="" alt="Profile photo" style="display:none;" />
+          <div class="avatar-edit-badge" onclick="triggerUpload()" title="Change photo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+        </div>
+
+        <div class="avatar-info">
+          <h3>Upload a profile photo</h3>
+          <p>A clear, professional photo helps others recognise you. Your photo is stored securely and only visible to you and your team.</p>
+          <div class="avatar-actions">
+            <button class="btn btn-primary" onclick="triggerUpload()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Photo
+            </button>
+            <button class="btn btn-secondary" id="removePhotoBtn" onclick="removePhoto()" style="display:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden file input -->
+      <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/webp,image/gif"
+             onchange="handleFileSelect(event)" style="display:none;" />
+
+      <!-- Progress bar -->
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Uploading...</div>
+      </div>
+
+      <!-- Preview sizes -->
+      <div class="crop-preview-section" id="cropPreview">
+        <div class="crop-header">
+          <h4>Preview how your photo will appear</h4>
+          <button class="btn btn-secondary" style="padding:6px 12px; font-size:11.5px;" onclick="triggerUpload()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Change
+          </button>
+        </div>
+        <div class="preview-row">
+          <div>
+            <img id="previewCircle" class="preview-circle" src="" alt="Circle preview" />
+            <div class="preview-size-label">Avatar</div>
+          </div>
+          <div>
+            <img id="previewSquare" class="preview-square" src="" alt="Square preview" />
+            <div class="preview-size-label">Card</div>
+          </div>
+          <div>
+            <img id="previewSquareSm" class="preview-square-sm" src="" alt="Small preview" />
+            <div class="preview-size-label">Sidebar</div>
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top:0; padding-top:16px;">
+          <button class="btn btn-secondary" onclick="removePhoto()">Cancel</button>
+          <button class="btn btn-success" onclick="savePhoto()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Photo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Info Card -->
+    <div class="s-card">
+      <div class="s-card-header">
+        <div>
+          <div class="s-card-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Personal Information
+          </div>
+          <div class="s-card-subtitle">Update your name, contact details, and business info</div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" id="fName" placeholder="e.g. Kwame" />
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" id="lName" placeholder="e.g. Mensah" />
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="emailAddr" placeholder="you@example.com" />
+          <span class="field-hint">Used for login and notifications</span>
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="phone" placeholder="+233 XX XXX XXXX" />
+        </div>
+        <div class="field">
+          <label>Business / Organisation Name</label>
+          <input type="text" id="businessName" placeholder="Optional" />
+        </div>
+        <div class="field">
+          <label>Region</label>
+          <select id="region">
+            <option value="">Select region</option>
+            <option>Greater Accra</option>
+            <option>Ashanti</option>
+            <option>Western</option>
+            <option>Central</option>
+            <option>Eastern</option>
+            <option>Northern</option>
+            <option>Upper East</option>
+            <option>Upper West</option>
+            <option>Volta</option>
+            <option>Oti</option>
+            <option>Bono</option>
+            <option>Bono East</option>
+            <option>Ahafo</option>
+            <option>Savannah</option>
+            <option>North East</option>
+            <option>Western North</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid single" style="margin-top:18px;">
+        <div class="field">
+          <label>Bio <span style="font-weight:400; color:var(--text-muted);">(optional)</span></label>
+          <textarea id="bio" placeholder="Tell us a little about yourself or your business..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-secondary" onclick="resetForm()">Discard</button>
+        <button class="btn btn-primary" onclick="saveProfile()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /tab-profile -->
+
+  <!-- ══ TAB: SECURITY ══ -->
+  <div id="tab-security" class="settings-panel">
+    <div class="s-card">
+      <div class="s-card-header">
+        <div>
+          <div class="s-card-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Change Password
+          </div>
+          <div class="s-card-subtitle">Use a strong password to protect your account</div>
+        </div>
+      </div>
+      <div class="form-grid single">
+        <div class="field">
+          <label>Current Password</label>
+          <input type="password" id="currentPw" placeholder="Enter your current password" />
+        </div>
+        <div class="field">
+          <label>New Password</label>
+          <input type="password" id="newPw" placeholder="Min. 8 characters" />
+        </div>
+        <div class="field">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmPw" placeholder="Repeat new password" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="changePassword()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Update Password
+        </button>
+      </div>
+    </div>
+
+    <div class="danger-zone">
+      <div class="s-card-header">
+        <div class="s-card-title">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Danger Zone
+        </div>
+      </div>
+      <div class="danger-item">
+        <div class="danger-item-info">
+          <h4>Delete Account</h4>
+          <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+        </div>
+        <button class="btn btn-danger" onclick="confirmDeleteAccount()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Delete Account
+        </button>
+      </div>
+    </div>
+  </div><!-- /tab-security -->
+
+  <!-- ══ TAB: NOTIFICATIONS ══ -->
+  <div id="tab-notifications" class="settings-panel">
+    <div class="s-card">
+      <div class="s-card-header">
+        <div>
+          <div class="s-card-title">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Notification Preferences
+          </div>
+          <div class="s-card-subtitle">Choose what updates you'd like to receive</div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Order Confirmations</h4>
+          <p>Receive a notification every time an order is placed</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Wallet Funding Alerts</h4>
+          <p>Get notified when your wallet is topped up</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Low Balance Warning</h4>
+          <p>Alert when wallet balance drops below ₵5.00</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Promotional Offers</h4>
+          <p>Occasional deals, discounts, and platform news</p>
+        </div>
+        <label class="toggle"><input type="checkbox" /><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <h4>Security Alerts</h4>
+          <p>Notify me of login attempts and password changes</p>
+        </div>
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="showToast('Notification preferences saved.', 'success')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div><!-- /tab-notifications -->
+
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div id="toast">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="toastIcon"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Saved successfully.</span>
+</div>
+
+<script>
+/* ── TAB SWITCHING ── */
+function switchTab(name) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+/* ── SIDEBAR HELPERS ── */
+function toggleDropdown(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+function openMenu() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeMenu() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ── TOAST ── */
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const icon = document.getElementById('toastIcon');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'show ' + type;
+  icon.innerHTML = type === 'success'
+    ? '<polyline points="20 6 9 17 4 12"/>'
+    : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 3400);
+}
+
+/* ── PHOTO UPLOAD ── */
+function triggerUpload() {
+  document.getElementById('avatarUpload').click();
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  processFile(file);
+}
+
+function processFile(file) {
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image must be smaller than 5MB.', 'error');
+    return;
+  }
+  if (!file.type.startsWith('image/')) {
+    showToast('Please select a valid image file.', 'error');
+    return;
+  }
+
+  // Show progress
+  const prog = document.getElementById('uploadProgress');
+  const bar  = document.getElementById('progressBar');
+  const lbl  = document.getElementById('progressLabel');
+  prog.style.display = 'block';
+  bar.style.width = '0%';
+  lbl.textContent = 'Processing image...';
+
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct += Math.random() * 22;
+    if (pct >= 100) { pct = 100; clearInterval(interval); }
+    bar.style.width = pct + '%';
+  }, 80);
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const src = ev.target.result;
+
+    // Validate dimensions
+    const img = new Image();
+    img.onload = () => {
+      clearInterval(interval);
+      bar.style.width = '100%';
+      lbl.textContent = 'Done!';
+      setTimeout(() => { prog.style.display = 'none'; }, 800);
+
+      if (img.width < 200 || img.height < 200) {
+        showToast('Image must be at least 200×200px.', 'error');
+        return;
+      }
+      applyPreview(src);
+    };
+    img.src = src;
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyPreview(src) {
+  // Hide placeholder, show image inside settingsAvatarBox
+  const box = document.getElementById('settingsAvatarBox');
+  box.innerHTML = `<img src="${src}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:22px;" />`;
+
+  const previewImg = document.getElementById('avatarPreviewImg');
+  previewImg.src = src;
+  previewImg.style.display = 'block';
+
+  // Set all preview sizes
+  ['previewCircle', 'previewSquare', 'previewSquareSm'].forEach(id => {
+    document.getElementById(id).src = src;
+  });
+
+  // Show crop preview section & remove button
+  document.getElementById('cropPreview').classList.add('visible');
+  document.getElementById('removePhotoBtn').style.display = 'inline-flex';
+
+  // Also update sidebar avatar
+  const sidebarAvatar = document.getElementById('avatarBox');
+  if (sidebarAvatar) {
+    sidebarAvatar.innerHTML = `<img src="${src}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />`;
+  }
+}
+
+function savePhoto() {
+  // Hook into your Supabase upload here:
+  // const { data, error } = await supabase.storage.from('avatars').upload(...)
+  showToast('Profile photo saved successfully!', 'success');
+}
+
+function removePhoto() {
+  const box = document.getElementById('settingsAvatarBox');
+  box.innerHTML = `<span id="settingsInitials">👤</span>`;
+
+  const previewImg = document.getElementById('avatarPreviewImg');
+  previewImg.style.display = 'none';
+  previewImg.src = '';
+  document.getElementById('cropPreview').classList.remove('visible');
+  document.getElementById('removePhotoBtn').style.display = 'none';
+  document.getElementById('avatarUpload').value = '';
+
+  const sidebarAvatar = document.getElementById('avatarBox');
+  if (sidebarAvatar) sidebarAvatar.innerHTML = 'D4';
+}
+
+/* ── FORM ACTIONS ── */
+// Alias so settings.js can also call uploadAvatar()
+function uploadAvatar() { savePhoto(); }
+
+function saveProfile() {
+  const firstName = document.getElementById('fName').value.trim();
+  const lastName  = document.getElementById('lName').value.trim();
+  if (!firstName || !lastName) {
+    showToast('Please enter your first and last name.', 'error');
+    return;
+  }
+  // Hook into your Supabase profile update here
+  showToast('Profile updated successfully!', 'success');
+}
+
+function resetForm() {
+  ['fName','lName','emailAddr','phone','businessName','bio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const region = document.getElementById('region');
+  if (region) region.selectedIndex = 0;
+}
+
+function changePassword() {
+  const np = document.getElementById('newPw').value;
+  const cp = document.getElementById('confirmPw').value;
+  if (np.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+  if (np !== cp)     { showToast('Passwords do not match.', 'error'); return; }
+  showToast('Password updated successfully!', 'success');
+  ['currentPw','newPw','confirmPw'].forEach(id => document.getElementById(id).value = '');
+}
+
+function confirmDeleteAccount() {
+  if (confirm('Are you absolutely sure? This will permanently delete your account and all data. This cannot be undone.')) {
+    showToast('Account deletion request submitted.', 'error');
+  }
+}
+</script>
+
+<script src="js/menu.js"></script>
+<script src="js/settings.js"></script>
+</body>
+</html>
